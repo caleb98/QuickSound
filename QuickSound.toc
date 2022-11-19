@@ -1,0 +1,7 @@
+## Interface: 100002
+## Title: QuickSound
+## Notes: Easily accessible sound panel for adjust volumes on the fly.
+## Author: Healyoupsych-Area 52
+## Version: 0.0.1
+
+QuickSound.lua
