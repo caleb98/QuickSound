@@ -26,4 +26,6 @@ jobs:
         
       - name: Package and Release
         uses: BigWigsMods/packager@v2
+        with:
+          args: -p 706549 -a J96EBXKg
         
