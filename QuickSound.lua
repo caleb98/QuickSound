@@ -11,14 +11,14 @@ local options = {
 			type = "group",
 			desc = "Change how the QuickSound panel looks.",
 			args = {
-				mouseoverHeader = {
+				panelHeader = {
 					order = 0,
-					name = "Visibility",
+					name = "Panel",
 					type = "header"
 				},
-				mouseoverDesc = {
+				panelDesc = {
 					order = 1,
-					name = "When toggled ON, the panel will only display on mouseover. When toggled OFF, it will always be visible.",
+					name = "Set when the panel should be visible, and if it should be locked instead of draggable.",
 					type = "description"				
 				},
 				mouseover = {
@@ -28,6 +28,24 @@ local options = {
 					type = "toggle",
 					get = "GetMouseoverOnly",
 					set = "SetMouseoverOnly",
+				},
+				lockFrame = {
+					order = 3,
+					name = "Lock Frame",
+					type = "toggle",
+					get = "GetFrameLocked",
+					set = "SetFrameLocked",
+				},
+				centerDesc = {
+					order = 5,
+					name = "\n\nRecenter the panel in the middle of the screen. Useful if the panel is not visible or has been moved offscreen.",
+					type = "description",
+				},
+				centerButton = {
+					order = 6,
+					name = "Center Panel in Screen",
+					type = "execute",
+					func = "CenterPanelInScreen"
 				},
 
 				borderHeader = {
@@ -115,6 +133,7 @@ local defaultDB = {
 		frameBackgroundColor = { 0, 0, 0, 0.5 },
 		frameInsets = 4,
 		mouseoverOnly = true,
+		isPositioned = false,
 	}
 }
 
@@ -138,6 +157,12 @@ function QuickSound:OnInitialize()
 	self.SlidersPanel = CreateFrame("Frame", "QuickSound_SlidersPanel", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 	self:UpdateStyle()
 	self.SlidersPanel:SetSize(200, 190)
+
+	-- If the frame has not been positioned, center it in the screen
+	if not self.db.profile.isPositioned then
+		self:CenterPanelInScreen()
+		self.db.profile.isPositioned = true
+	end
 
 	--Make sliders frame movable
 	self.SlidersPanel:SetMovable(true)
@@ -261,7 +286,9 @@ end
 -- Dragging Logic
 --------------------------------------------------
 function QuickSound:StartFrameDrag()
-	self:StartMoving()
+	if not QuickSound:GetFrameLocked() then
+		self:StartMoving()
+	end
 end
 
 function QuickSound:EndFrameDrag()
@@ -289,6 +316,11 @@ function QuickSound:GetBackgroundTypes()
 		reverse[v] = k
 	end
 	return reverse
+end
+
+function QuickSound:CenterPanelInScreen()
+	self.SlidersPanel:ClearAllPoints()
+	self.SlidersPanel:SetPoint("CENTER", UIParent, "CENTER")
 end
 
 -- Border Type
@@ -359,6 +391,15 @@ end
 function QuickSound:SetMouseoverOnly(info, input)
 	self.db.profile.mouseoverOnly = input
 	self:UpdateStyle()
+end
+
+-- Frame Locked
+function QuickSound:GetFrameLocked(info)
+	return self.db.profile.isLocked
+end
+
+function QuickSound:SetFrameLocked(info, input)
+	self.db.profile.isLocked = input
 end
 
 -- Style Updater
