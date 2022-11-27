@@ -133,7 +133,13 @@ local defaultDB = {
 		frameBackgroundColor = { 0, 0, 0, 0.5 },
 		frameInsets = 4,
 		mouseoverOnly = true,
-		isPositioned = false,
+		pos = { 
+			point = "CENTER", 
+			relativeTo = UIParent,
+			relativePoint = "CENTER",
+			x = 0,
+			y = 0
+		}
 	}
 }
 
@@ -157,19 +163,14 @@ function QuickSound:OnInitialize()
 	self.SlidersPanel = CreateFrame("Frame", "QuickSound_SlidersPanel", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 	self:UpdateStyle()
 	self.SlidersPanel:SetSize(200, 190)
-
-	-- If the frame has not been positioned, center it in the screen
-	if not self.db.profile.isPositioned then
-		self:CenterPanelInScreen()
-		self.db.profile.isPositioned = true
-	end
+	self.SlidersPanel:SetDontSavePosition(true)
 
 	--Make sliders frame movable
 	self.SlidersPanel:SetMovable(true)
 	self.SlidersPanel:EnableMouse(true)
 	self.SlidersPanel:RegisterForDrag("LeftButton")
-	self.SlidersPanel:SetScript("OnDragStart", self.StartFrameDrag)
-	self.SlidersPanel:SetScript("OnDragStop", self.EndFrameDrag)
+	self.SlidersPanel:SetScript("OnMouseDown", self.StartFrameDrag)
+	self.SlidersPanel:SetScript("OnMouseUp", self.EndFrameDrag)
 	self.SlidersPanel:SetClampedToScreen(true)
 	self.SlidersPanel:SetScript("OnEnter", self.MouseEnter)
 	self.SlidersPanel:SetScript("OnLeave", self.MouseLeave)
@@ -288,11 +289,20 @@ end
 function QuickSound:StartFrameDrag()
 	if not QuickSound:GetFrameLocked() then
 		self:StartMoving()
+		self:SetUserPlaced(false)
 	end
 end
 
 function QuickSound:EndFrameDrag()
 	self:StopMovingOrSizing()
+	local point, relativeTo, relativePoint, x, y = self:GetPoint(1)
+	QuickSound.db.profile.pos = { 
+		point = point,
+		relativeTo = relativeTo, 
+		relativePoint = relativePoint, 
+		x = x, 
+		y = y
+	}
 end
 
 --------------------------------------------------
@@ -319,8 +329,14 @@ function QuickSound:GetBackgroundTypes()
 end
 
 function QuickSound:CenterPanelInScreen()
-	self.SlidersPanel:ClearAllPoints()
-	self.SlidersPanel:SetPoint("CENTER", UIParent, "CENTER")
+	self.db.profile.pos = { 
+		point = "CENTER", 
+		relativeTo = UIParent,
+		relativePoint = "CENTER",
+		x = 0,
+		y = 0
+	}
+	self:UpdateStyle()
 end
 
 -- Border Type
@@ -427,6 +443,16 @@ function QuickSound:UpdateStyle()
 	else
 		self:SetAlpha(self.SlidersPanel, 1)
 	end
+
+	local pos = self.db.profile.pos
+	self.SlidersPanel:ClearAllPoints()
+	self.SlidersPanel:SetPoint(
+		pos.point,
+		pos.relativeTo,
+		pos.relativePoint,
+		pos.x,
+		pos.y
+	)
 end
 
 function QuickSound:OpenSettings()
